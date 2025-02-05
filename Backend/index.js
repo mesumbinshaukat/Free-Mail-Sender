@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require("cors");
 const multer = require('multer');
 const connectDB = require('./db/config.js');
-const { sendEmail, sendBulkEmailsFromCSV, sendBulkEmailsFromExcel } = require('../Backend/controllers/EmailControllers.js');
+const { sendEmail, sendBulkEmailsFromCSV, sendBulkEmailsFromExcel } = require('controllers/EmailControllers.js');
 
 const app = express();
 
