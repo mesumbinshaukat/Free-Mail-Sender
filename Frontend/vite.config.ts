@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   server: {
     proxy: {
-      "/api": "http://localhost:5000", // Proxy API requests
+      "/api": "https://backend-topaz-theta.vercel.app", // Proxy API requests
     },
   },
   plugins: [react(), tailwindcss()],

@@ -34,41 +34,14 @@ const detectEmailColumn = (row) => {
 
 // Function to send individual emails
 const sendEmail = async (req, res) => {
-  const { to, subject, text, html } = req.body;
-
-  console.log('Sending email to:', to);
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to,
-    subject,
-    text,
-    html,
-  };
+  const { to, subject, message } = req.body;
 
   try {
-    await transporter.sendMail(mailOptions);
-
-    // Log email details in MongoDB
-    await EmailLog.create({
-      recipient: to,
-      subject,
-      message: text,
-      status: 'sent',
-    });
-
-    return res.status(200).json({ message: 'Email sent successfully!' });
+    await transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, text: message });
+    await EmailLog.create({ recipient: to, subject, message, status: 'sent' });
+    res.status(200).json({ message: 'Email sent successfully!' });
   } catch (error) {
-    console.error('Email sending failed:', error);
-    await EmailLog.create({
-      recipient: to,
-      subject,
-      message: text,
-      status: 'failed',
-      error: error.message,
-    });
-
-    return res.status(500).json({ message: 'Email sending failed', error: error.message });
+    res.status(500).json({ message: 'Email sending failed', error: error.message });
   }
 };
 
