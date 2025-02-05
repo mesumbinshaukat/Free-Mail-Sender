@@ -1,23 +1,20 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require("cors");
+const cors = require('cors');
 const multer = require('multer');
 const connectDB = require('./db/config.js');
 const { sendEmail, sendBulkEmailsFromCSV, sendBulkEmailsFromExcel } = require('./controllers/EmailControllers.js');
+const serverless = require('serverless-http'); // Add this line
 
 const app = express();
 
-// Multer Configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, './uploads'),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
-});
-const upload = multer({ storage });
+// Multer Configuration (Memory Storage)
+const upload = multer({ storage: multer.memoryStorage() }); // Updated for serverless
 
 // CORS Configuration
 const corsOptions = {
   origin: '*', // Allow all origins
-  methods: ["GET", "POST"],
+  methods: ['GET', 'POST'],
 };
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -30,4 +27,5 @@ app.post('/api/send-bulk-emails-from-excel', upload.single('file'), sendBulkEmai
 // Connect to MongoDB
 connectDB();
 
-module.exports = app; // Serverless Function Export
+// Export for Appwrite Serverless
+module.exports.handler = serverless(app); // Updated for serverless

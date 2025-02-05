@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 const async = require('async');
 const csv = require('csv-parser');
 const xlsx = require('xlsx');
-const fs = require('fs');
+const stream = require('stream'); // Add this for buffer processing
 const EmailLog = require('../models/EmailLog');
 
 // Create a reusable transporter object using SMTP transport
@@ -63,14 +63,17 @@ const sendBulkEmailsFromCSV = async (req, res) => {
     return res.status(400).json({ message: 'Subject and message are required' });
   }
 
-  const filePath = req.file.path;
+  const buffer = req.file.buffer; // Use buffer instead of file path
   const emailLogs = [];
   const errorLogs = [];
   let emailColumn = null;
 
   try {
     let rowNumber = 0;
-    fs.createReadStream(filePath)
+    const bufferStream = new stream.PassThrough();
+    bufferStream.end(buffer);
+
+    bufferStream
       .pipe(csv())
       .on('data', (row) => {
         rowNumber++;
@@ -98,7 +101,7 @@ const sendBulkEmailsFromCSV = async (req, res) => {
           });
         }
 
-        console.log("Total emails extracted:", emailLogs.length);
+        console.log('Total emails extracted:', emailLogs.length);
 
         // Send bulk emails with concurrency limit (5 at a time)
         await async.eachLimit(emailLogs, 5, async (log) => {
@@ -123,9 +126,6 @@ const sendBulkEmailsFromCSV = async (req, res) => {
 
         // Save logs in database
         await EmailLog.insertMany(emailLogs);
-
-        // Delete uploaded file after processing
-        fs.unlinkSync(filePath);
 
         return res.status(200).json({ message: 'Bulk emails sent successfully!', logs: emailLogs });
       });
@@ -155,12 +155,12 @@ const sendBulkEmailsFromExcel = async (req, res) => {
     return res.status(400).json({ message: 'Subject and message are required' });
   }
 
-  const filePath = req.file.path;
+  const buffer = req.file.buffer; // Use buffer instead of file path
   const emailLogs = [];
   const errorLogs = [];
 
   try {
-    const workbook = xlsx.readFile(filePath);
+    const workbook = xlsx.read(buffer, { type: 'buffer' }); // Read from buffer
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const rows = xlsx.utils.sheet_to_json(sheet);
@@ -192,7 +192,7 @@ const sendBulkEmailsFromExcel = async (req, res) => {
       });
     }
 
-    console.log("Total emails extracted:", emailLogs.length);
+    console.log('Total emails extracted:', emailLogs.length);
 
     // Send bulk emails with concurrency limit (5 at a time)
     await async.eachLimit(emailLogs, 5, async (log) => {
@@ -217,9 +217,6 @@ const sendBulkEmailsFromExcel = async (req, res) => {
 
     // Save logs in database
     await EmailLog.insertMany(emailLogs);
-
-    // Delete uploaded file after processing
-    fs.unlinkSync(filePath);
 
     return res.status(200).json({ message: 'Bulk emails sent successfully!', logs: emailLogs });
   } catch (error) {
