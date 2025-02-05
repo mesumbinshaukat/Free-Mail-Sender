@@ -16,7 +16,7 @@ const upload = multer({ storage });
 
 // CORS Configuration
 const corsOptions = {
-  origin: 'http://localhost:5173',
+  origin: '*', // Allow all origins
   methods: ["GET", "POST"],
 };
 app.use(cors(corsOptions));
@@ -27,8 +27,7 @@ app.post('/api/send-email', sendEmail);
 app.post('/api/send-bulk-emails-from-csv', upload.single('file'), sendBulkEmailsFromCSV);
 app.post('/api/send-bulk-emails-from-excel', upload.single('file'), sendBulkEmailsFromExcel);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, async () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  await connectDB();
-});
+// Connect to MongoDB
+connectDB();
+
+module.exports = app; // Serverless Function Export
