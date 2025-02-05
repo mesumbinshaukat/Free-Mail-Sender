@@ -2,8 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require("cors");
 const multer = require('multer');
-const connectDB = require('./db/config');
-const { sendEmail, sendBulkEmailsFromCSV, sendBulkEmailsFromExcel } = require('./controllers/EmailControllers');
+const connectDB = require('./db/config.js');
+const { sendEmail, sendBulkEmailsFromCSV, sendBulkEmailsFromExcel } = require('./controllers/EmailControllers.js');
 
 const app = express();
 
